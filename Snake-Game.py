@@ -1,6 +1,6 @@
 import curses
 import random
-
+import time
 
 class Game:
     def __init__(self, snakeX, snakeY):
@@ -14,7 +14,6 @@ class Game:
         self.window.timeout(100)
         self.score = 0
         curses.curs_set(0) #removes my cursor
-    def initialize_game(self):
         self.initalKey = curses.KEY_RIGHT
         self.box = self.window.subwin(self.screenHeight-2,self.screenWidth-2,1,2)
         self.box.box()
@@ -23,15 +22,35 @@ class Game:
         curses.init_pair(2, curses.COLOR_RED,curses.COLOR_BLACK)
         curses.init_pair(3, curses.COLOR_YELLOW,curses.COLOR_BLACK)
         self.window.addch(self.food[0],self.food[1],curses.ACS_PI,curses.color_pair(2))
+    
     def check_collisions(self):
         if (self.snakeBody[0][0] in [1,self.screenHeight - 2] 
             or self.snakeBody[0][1] in [2,self.screenWidth - 2] 
             or self.snakeBody[0] in self.snakeBody[1:]):
-            print(f"Game Over! Final Score: {self.score}")
-            curses.endwin()
-            quit()
+            self.window.clear()
+            curses.mousemask(1)
+            gameOverText = f"Game Over! Final Score: {self.score}"
+            clickToReset = "Click Anywhere to reset the Game"
+            qToQuit = "Press Q on your keyboard to quit Game"
+            self.window.addstr(4,self.screenWidth//2 - len(gameOverText)//2, gameOverText,curses.color_pair(3))
+            self.window.addstr(6,self.screenWidth//2 - len(clickToReset)//2, clickToReset,curses.color_pair(1))
+            self.window.addstr(8,self.screenWidth//2 - len(qToQuit)//2, qToQuit,curses.color_pair(2))
+            self.window.refresh()
+            while True:
+                curses.noecho()
+                varKey = self.window.getch()
+                if varKey == curses.KEY_MOUSE:
+                    _,_mx,_my,_,_ = curses.getmouse()
+                    if 0 <= _mx < self.screenWidth and 0 <= _my <= self.screenHeight:
+                        self.window.clear()
+                        self.window.refresh()
+                        self.__init__(self.snakeX,self.snakeY)
+                        self.main_game()
+                elif varKey == ord('q'):
+                    self.window.clear()
+                    curses.endwin()
+                    quit()
     def main_game(self):
-        self.initialize_game()
         while not self.check_collisions():
             scoreText = f"Score: {self.score}"
             self.window.addstr(0,self.screenWidth//2 - len(scoreText)//2, scoreText,curses.color_pair(3))
